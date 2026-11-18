@@ -1,0 +1,46 @@
+# 1. Display name shown in the "Actions" tab on GitHub
+name: OWASP LLM Security Evaluation Gate
+
+# 2. Event triggers: runs automatically on every push or PR targeting the 'main' branch
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# 3. One or more isolated virtual machines ('jobs') to execute
+jobs:
+  owasp-llm-eval:
+    # Provisions a fresh Ubuntu Linux VM for this job
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step A: Clones the repository code onto the blank Ubuntu VM
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # Step B: Installs Python 3.13 and configures pip on the VM
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      # Step C: Installs the exact pinned dependencies from requirements.txt
+      - name: Install Python Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      # Step D: Installs Ollama on Linux, starts the server in the background (&),
+      # waits 5 seconds for port 11434 to bind, and pulls the two required models
+      - name: Install & Start Ollama Service
+        run: |
+          curl -fsSL https://ollama.com | sh
+          ollama serve &
+          sleep 5
+          ollama pull llama3.2:3b
+          ollama pull nomic-embed-text
+
+      # Step E: Runs the CLI evaluation suite; exit code 0 = green check, 1 = red fail
+      - name: Execute OWASP LLM Red-Team Evaluation Suite
+        run: python run_eval_suite.py

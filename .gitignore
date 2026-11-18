@@ -1,0 +1,17 @@
+# Python & Virtual Environment
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+*.egg-info/
+dist/
+build/
+
+#Pytest & Local Lab Artifacts
+.pytest_cache/
+.coverage
+*.env
+security_audit.jsonl
+chroma_db/
+sandbox_docs/
